@@ -9,8 +9,10 @@
 
 using namespace std;
 using namespace cv;
+cv::Rect cropper(500, 2800, 2000, 2000);
 
 void saveImagePlusCrop (const Mat& imageToWrite, const std::string& name, const cv::Rect& cropper);
+void medianFilters(const Mat& image_src);
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -22,34 +24,22 @@ void saveImagePlusCrop (const Mat& imageToWrite, const std::string& name, const 
 int main(int argc, char* argv[])
 {
     std::string img_path;
-    int filter_size[3] = {3,5,7};
-    cv::Mat medi_img;
-    cv::Rect cropper(50, 280, 200, 200);
+     Mat noiseImage;
 
 	// check input parameters
 	if( argc > 1 ) img_path = std::string( argv[1] );
 
 	// load testing images
-	cv::Mat src_rgb = cv::imread( img_path );
+	cv::Mat src_gray = imread(img_path, CV_LOAD_IMAGE_GRAYSCALE);
 
 	// check testing images
-	if( src_rgb.empty() ) {
+	if( src_gray.empty() ) {
 		std::cout << "Failed to load image: " << img_path << std::endl;
 		return -1;
 	}
 
-	cv::Mat src_gray;
-	cv::cvtColor( src_rgb, src_gray, CV_BGR2GRAY );
 
-	//---------------------------------------------------------------------------
-
-
-	for (int i = 0; i <= 2; i++)
-	{
-		cv::medianBlur( src_gray, medi_img, filter_size[i]);
-		imwrite(std::to_string(filter_size[i])+"_median.bmp", medi_img);
-		//saveImagePlusCrop(medi_img, "median" + std::to_string(filter_size[i]), cropper);
-	}
+	medianFilters(src_gray);
 	
     return 0;
 }
@@ -58,4 +48,18 @@ void saveImagePlusCrop (const Mat& imageToWrite, const std::string& name, const 
     imwrite(name + ".bmp", imageToWrite);
     imwrite(name + "Crop.bmp", imageToWrite(cropper));
 
+}
+
+void medianFilters(const Mat& image_src){
+
+	cv::Mat medi_img;
+	int filter_size[3] = {3,5,7};
+
+	for (int i = 0; i <= 2; i++)
+	{
+		cv::medianBlur(image_src, medi_img, filter_size[i]);
+		//imwrite(std::to_string(filter_size[i])+"_median.bmp", medi_img);
+		saveImagePlusCrop(medi_img, "median" + std::to_string(filter_size[i]), cropper);
+	}
+	return;
 }
