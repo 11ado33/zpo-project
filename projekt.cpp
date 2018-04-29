@@ -8,11 +8,15 @@
 #include <opencv2/imgproc/imgproc.hpp>  // Gaussian Blur
 #include <opencv2/highgui/highgui.hpp>  // OpenCV window I/O
 
+#include "imageExporter.h"
+
 using namespace std;
 using namespace cv;
 
-void addGaussianNoise(const Mat& I, Mat& O, double mean, double stdev);
+void whiteNoise(const cv::Mat& src, cv::Mat& dst, float intensity);
+void addSPNoise(const Mat& I, Mat& O, double p);
 void saveImagePlusCrop (const Mat& imageToWrite, const std::string& name, const cv::Rect& cropper);
+
 
 int main(int argc, char *argv[]) {
 
@@ -33,21 +37,53 @@ int main(int argc, char *argv[]) {
     srcImageCropped = srcImage(cropper);
     imwrite("imgageCrop.bmp", srcImageCropped);
 
-    addGaussianNoise(srcImage, noiseImage, 0, 0.1);
-    saveImagePlusCrop(noiseImage, "gauss", cropper);
+	whiteNoise(srcImage, noiseImage, 0.1);
+    saveImagePlusCrop(noiseImage, "gaussWhite-0_1", cropper);
+
+	whiteNoise(srcImage, noiseImage, 1.0);
+	saveImagePlusCrop(noiseImage, "gaussWhite-1_0", cropper);
+
+	addSPNoise(srcImage, noiseImage, 0.1);
+	saveImagePlusCrop(noiseImage, "SaP-0-1", cropper);
+
+	addSPNoise(srcImage, noiseImage, 0.2);
+	saveImagePlusCrop(noiseImage, "SaP-0-2", cropper);
+
+	
+
+	//salt and pepper
+	//https://stackoverflow.com/questions/10310762/speckle-noise-generation
 
     return 0;
 
 }
 
-void saveImagePlusCrop (const Mat& imageToWrite, const std::string& name, const cv::Rect& cropper) {
-    imwrite(name + ".bmp", imageToWrite);
-    imwrite(name + "Crop.bmp", imageToWrite(cropper));
 
+//  Funkce pro generování bílého šumu.
+//  Intenzita udává maximální velikost šumu.
+void whiteNoise(const cv::Mat& src, cv::Mat& dst, float intensity)
+{
+	cv::RNG rng;
+	cv::Mat noise = cv::Mat::zeros(src.size(), CV_32SC1);
+	for (int i = 0; i < noise.rows*noise.cols; ++i) {
+		// vygenerujte hodnoty pro bílý šum a uložte do obrazu se šumem
+		// využijte: rng.gaussian(double sigma)
+		// a vztah pro gaussùv pásmový bílý šum
+		// vzorky bílého šumu s výkonem (rozptylem) napø. 0.2 vypoèteme:
+		// v = sqrt(výkon=0.2) * gaussian(sigma=1.0)
+		// funkce gaussian() generuje náhodné vzorky s normálním rozlošením se støední hodnotou 0 a rozptylem 1.
+		noise.at<int>(i) = round(sqrt(255 * intensity) * rng.gaussian(1.0));
+	}
+	cv::Mat tmp;
+	src.convertTo(tmp, noise.type());
+	tmp = tmp + noise;
+	tmp.convertTo(dst, src.type());
 }
+
 
 //http://answers.opencv.org/question/68589/adding-noise-to-image-opencv/
 // I is the grayscale of the input image
+//Mean value of random value, standard deviaiton
 void addGaussianNoise(const Mat& I, Mat& O, double mean, double stdev)
 {
 

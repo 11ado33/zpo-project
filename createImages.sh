@@ -20,9 +20,9 @@ fi;
 ######Moving files###########
 echo "Moving files..."
 
-mkdir -p gauss
-mv gauss.bmp gauss
-mv gaussCrop.bmp gauss
+mkdir -p gauss-0-0_1
+mv gauss-0-0_1.bmp gauss-0-0_1
+mv gauss-0-0_1Crop.bmp gauss-0-0_1
 
 
 
