@@ -13,6 +13,7 @@ cv::Rect cropper(500, 2800, 2000, 2000);
 
 void saveImagePlusCrop (const Mat& imageToWrite, const std::string& name, const cv::Rect& cropper);
 void medianFilters(const Mat& image_src);
+void lowPassFilter(const Mat& src1);
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -38,8 +39,11 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	saveImagePlusCrop(src_gray, "gray", cropper);
 
-	medianFilters(src_gray);
+	//medianFilters(src_gray);
+	lowPassFilter(src_gray);
+
 	
     return 0;
 }
@@ -62,4 +66,28 @@ void medianFilters(const Mat& image_src){
 		saveImagePlusCrop(medi_img, "median" + std::to_string(filter_size[i]), cropper);
 	}
 	return;
+}
+
+void lowPassFilter(const Mat& src1){
+
+	Mat src2 = src1.clone();
+	int a = 3;
+	Scalar intensity1 = 0;
+
+	for (int i = 0; i < src1.rows-a; i++){ 
+		for (int j = 0; j < src1.cols-a; j++){ 
+	   		Scalar intensity2;
+	   		
+	   		for (int p = 0; p<a; p++){ 
+	     		for (int q = 0; q<a; q++){ 
+
+	     			intensity1 = src1.at<uchar>(i+p,j+q); 
+	      			intensity2.val[0] +=intensity1.val[0];
+	     		}
+	  		}
+	    	src2.at<uchar>(i+(a-1)/2,j+(a-1)/2)=intensity2.val[0]/(a*a);
+	   } 
+	}
+	//imwrite("lowPassFilter.bmp", src2);
+	saveImagePlusCrop(src2, "lowPassFilter",cropper);
 }
